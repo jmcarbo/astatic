@@ -1,0 +1,195 @@
+<html ng-app="myApp">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  
+    <title></title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+    
+    <!-- Latest compiled and minified JavaScript -->
+  </head>
+<body >
+  <nav class="navbar navbar-inverse" role="navigation">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">Brand</a>
+    </div>
+  </nav>
+  <div class="container" ng-controller="myctrl">
+    <div class="jumbotron">
+      {{$storage.counter}}
+      <input type="button" class="btn btn-error" ng-click="($storage.counter = $storage.counter + 1)" value="Increment counter">
+    </div>
+    <div class="row">
+      <div class="col-sm-4">
+        <div class="panel">
+          <div class="panel-body">
+            <ul>
+              <li ng-repeat="l in $storage.loginHistory"> {{l.user}} - {{l.lastLogin }} </a>
+            </ul>
+          </div>
+          <div class="panel-footer">
+            <input type="button" class="btn btn-info" ng-click="addHistory()" value="Add login history">
+            <input type="button" class="btn btn-info" ng-click="$storage.loginHistory=[]" value="Errase login history">
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <input type="text" ng-model="search1" ng-change="achange()">
+      </div>
+      <div class="col-sm-4">
+        <input type="button" class="btn btn-info" ng-click="getIP()" value="Add login history">
+         {{myIP}}
+        <input type="button" class="btn btn-info" ng-click="emitMessage()" value="Emit">
+      </div>
+    </div>
+    <div class="row">
+
+      <div class="col-sm-6" >
+      hello world {{avar}}
+      Size: {{documents.length}}
+      Inbox <span class="badge"> {{ (documents|filter:fname).length  }}</span>
+      <input type="text" ng-model="fname.doc.name"  >
+      <ul>
+        <li ng-repeat="d in documents | filter:fname | limitTo:100" >
+          <span ng-click="selectPerson(d)">{{d.doc.name}}</span> - {{d.doc.email}} - {{d.doc.age}}</li>
+      </ul>
+      </div>
+      <div class="col-sm-6" ng-controller="anotherctrl">
+  <form >
+      <input type="button" class="btn btn-default" ng-click="populate()" value="Populate">
+      <input type="button" class="btn btn-default" ng-click="addPerson()" value="Add person">
+      <input type="button" class="btn btn-default" ng-click="deletePeople()" value="Delete people">
+      <input type="button" class="btn btn-default" ng-click="generatePerson()" value="Generate Person">
+      <input type="button" class="btn btn-default" ng-click="destroyDatabase()" value="Destroy database">
+      {{message}}
+      <input class="form-control" ng-model="person.name" >
+      <input class="form-control" ng-model="person.email">
+      <input type="number" class="form-control" ng-model="person.age" >
+  </form>
+      </div>
+  </div>
+</div>
+  <script src="jquery.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+  <script src="angular.min.js"></script>
+  <script src="pouchdb.min.js"></script>
+  <script src = "minfaker.js" type = "text/javascript"></script>
+  <script src = "ngstorage.min.js" type = "text/javascript"></script>
+  <script src = "moment-with-langs.min.js" type = "text/javascript"></script>
+  <script src = "underscore-min.js" type = "text/javascript"></script>
+  <script src = "socket.io.js" type = "text/javascript"></script>
+  <script>
+    var myApp = angular.module('myApp', ['ngStorage']);
+
+    function anotherctrl($scope) {
+      var db = new PouchDB('dbname');
+      //$scope.person.email = Faker.Internet.email(); 
+      $scope.destroyDatabase = function(){
+        db.destroy();
+      }
+      $scope.generatePerson = function(){
+        $scope.person.email = Faker.Internet.email(); 
+        $scope.person.name = Faker.Name.findName();
+        $scope.person.age = Faker.random.number(100);
+      }
+      $scope.deletePeople = function(){
+        db.allDocs({include_docs: false}, function(err, response) { 
+          alert(JSON.stringify(response));
+          $scope.$apply(function(){
+            for(p in response.rows) {
+              //alert(JSON.stringify(p));
+              db.remove(p, function(err, response){
+                alert(err);
+              });
+              db.info(function(err, response){
+                alert(response);
+              });
+            }
+            $scope.message = "done"; 
+          });
+        }); 
+      }
+      $scope.addPerson = function(){
+           db.post($scope.person
+           , function(err, response){ 
+             db.get(response.id, function(err, response){
+
+               $scope.documents.push({ doc: response });
+               $scope.$apply();
+             });
+          });
+      };
+      $scope.populate = function(){
+        for(var i = 0; i < 1000; i++){
+           db.post({
+             email:Faker.Internet.email() ,
+             name: Faker.Name.findName(),
+             age: Faker.random.number(100) 
+           }, function(err, response){ 
+             db.get(response.id, function(err, response){
+               $scope.documents.push({ doc: response });
+               $scope.$apply();
+             });
+          });
+        }
+        //db.allDocs({include_docs: true}, function(err, response) { $scope.documents = response.rows; $scope.$apply();}); 
+      };
+    }
+
+    myApp.controller('myctrl',function($scope, $filter, $localStorage, $sessionStorage, $http){
+      /*
+      var socket = io.connect("http://localhost:3000/");
+      socket.on('news', function (data) {
+        alert(data);
+        socket.emit('my other event', { my: 'data' });
+      });
+*/
+      $scope.emitMessage = function() {
+        socket.emit('news', { message: 'bla bla bla'});
+      }
+
+      $scope.$storage = $localStorage.$default({counter: 43, loginHistory: [] });
+      $scope.avar = "bla bla bal";
+      $scope.person = { name: '', email: '', age: 0 };
+       var db = new PouchDB('dbname');
+       db.allDocs({include_docs: true, limit: 100 }, function(err, response) { $scope.documents = response.rows; $scope.$apply(); }); 
+       db.allDocs({include_docs: true}, function(err, response) { $scope.documents = response.rows; $scope.$apply(); }); 
+
+      $scope.achange = _.debounce(function(){
+        alert($scope.search1);
+      }, 500);
+
+      $scope.getIP = function(){
+        $http.get('http://ip.jsontest.com/').success(function(data){
+          $scope.myIP=data.ip;
+        });
+      }
+
+      $scope.selectPerson = function(person){
+        $scope.person = { name: person.doc.name, email: person.doc.email, age: person.doc.age }; 
+        $scope.person.name = person.doc.name; 
+      }
+
+      $scope.getCount = function() {
+        var a = $filter('filter')($scope.documents, $scope.fname);
+        if(a){
+        return a.length ; 
+        }
+        else {
+        return 0 ; 
+        }
+      }
+
+      $scope.change = function(){
+        alert($scope.fname.doc.name);
+      };
+
+      $scope.addHistory = function(){
+        $scope.$storage.loginHistory.push({ user: Faker.Name.findName(), lastLogin: Faker.Date.past(2000,"2005/06/01") });
+      }
+    });
+    </script>
+</body>
+</html>
