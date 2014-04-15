@@ -70,6 +70,8 @@
   </form>
       </div>
   </div>
+  <div ng-show="online">You're online</div>
+   <div ng-hide="online">You're offline</div>
 </div>
   <script src="jquery.min.js"></script>
   <script src="js/bootstrap.min.js"></script>
@@ -84,7 +86,19 @@
   <script src = "accent-fold.js" type = "text/javascript"></script>
   <script>
     var myApp = angular.module('myApp', ['ngStorage']);
-
+    myApp.run(function($window, $rootScope) {
+      $rootScope.online = navigator.onLine;
+      $window.addEventListener("offline", function () {
+        $rootScope.$apply(function() {
+          $rootScope.online = false;
+        });
+      }, false);
+      $window.addEventListener("online", function () {
+        $rootScope.$apply(function() {
+          $rootScope.online = true;
+        });
+      }, false);
+    });
     function anotherctrl($scope) {
       var db = new PouchDB('dbname');
       //$scope.person.email = Faker.Internet.email(); 
