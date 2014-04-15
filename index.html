@@ -73,11 +73,14 @@
   <div ng-show="online">You're online</div>
    <div ng-hide="online">You're offline</div>
    <input type="text" class="form-control" ng-model="accountsearch">
-   <div ng-repeat="a in accounts | filter:accountsearch:comparator2">
+   <div ng-repeat="a in accounts | filter:accountsearch:comparator2 | limitTo: 10">
      {{ displayAccount(a) }}
    </div>
-   <div ng-repeat="c in values_currency | filter:accountsearch">
+   <div ng-repeat="c in values_currency | filter:accountsearch | limitTo: 10">
      {{ c|json }}
+   </div>
+   <div ng-repeat="pc in postal_codes_es | filter:accountsearch | limitTo: 10">
+     {{ pc|json }}
    </div>
 </div>
   <script src="jquery.min.js"></script>
@@ -95,6 +98,7 @@
   <script src = "sprintf.min.js" type = "text/javascript"></script>
   <script src = "accounts.js" type = "text/javascript"></script>
   <script src = "currency.js" type = "text/javascript"></script>
+  <script src = "postal_codes_es.js" type = "text/javascript"></script>
   <script>
     var myApp = angular.module('myApp', ['ngStorage']);
     myApp.run(function($window, $rootScope) {
@@ -235,6 +239,7 @@
       }
       $scope.accounts = accounts;
       $scope.currency = currency;
+      $scope.postal_codes_es = postal_codes_es;
       $scope.values_currency = _.values(currency);
       $scope.displayAccount = function(a){
         return sprintf("%0-10d - %s",parseInt(a.number),a.description)
