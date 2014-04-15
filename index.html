@@ -76,10 +76,12 @@
    <div ng-repeat="a in accounts | filter:accountsearch:comparator2 | limitTo: 10">
      {{ displayAccount(a) }}
    </div>
-   <div ng-repeat="c in values_currency | filter:accountsearch | limitTo: 10">
+   <input type="text" class="form-control" ng-model="currencysearch">
+   <div ng-repeat="c in values_currency | filter:currencysearch:comparator2 | limitTo: 10">
      {{ c|json }}
    </div>
-   <div ng-repeat="pc in postal_codes_es | filter:accountsearch | limitTo: 10">
+   <input type="text" class="form-control" ng-model="postalsearch">
+   <div ng-repeat="pc in postal_codes_es | filter:postalsearch:comparator2 | limitTo: 10">
      {{ pc|json }}
    </div>
 </div>
